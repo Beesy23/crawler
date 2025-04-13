@@ -14,6 +14,10 @@ func getHTML(rawURL string) (string, error) {
 	}
 	defer res.Body.Close()
 
+	if !strings.Contains(res.Header.Get("Content-Type"), "text/html") {
+		return "", fmt.Errorf("content-type header is not text/html")
+	}
+
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return "", err
@@ -21,10 +25,6 @@ func getHTML(rawURL string) (string, error) {
 
 	if res.StatusCode > 399 {
 		return "", fmt.Errorf("response failed with status code: %d and\nbody: %s", res.StatusCode, body)
-	}
-
-	if !strings.Contains(res.Header.Get("Content-Type"), "text/html") {
-		return "", fmt.Errorf("content-type header is not text/html")
 	}
 
 	return string(body), nil

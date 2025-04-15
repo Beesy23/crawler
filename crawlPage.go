@@ -3,15 +3,21 @@ package main
 import (
 	"fmt"
 	"net/url"
+	"sync"
 )
 
-func crawlPage(rawBaseURL, rawCurrentURL string, pages map[string]int) {
+type config struct {
+	pages              map[string]int
+	baseURL            *url.URL
+	mu                 *sync.Mutex
+	concurrencyControl chan struct{}
+	wg                 *sync.WaitGroup
+}
 
-	baseURL, err := url.Parse(rawBaseURL)
-	if err != nil {
-		fmt.Printf("error parsing baseURL %s: %s\n", rawBaseURL, err)
-		return
-	}
+func (cfg *config) crawlPage(rawCurrentURL string) {
+	baseURL := cfg.baseURL
+	pages := cfg.pages
+
 	currentURL, err := url.Parse(rawCurrentURL)
 	if err != nil {
 		fmt.Printf("error parsing currentURL %s: %s\n", rawCurrentURL, err)
@@ -41,12 +47,12 @@ func crawlPage(rawBaseURL, rawCurrentURL string, pages map[string]int) {
 	}
 	fmt.Printf("Crawler succesfully checked %s\n", rawCurrentURL)
 
-	URLs, err := getURLsFromHTML(HTML, rawBaseURL)
+	URLs, err := getURLsFromHTML(HTML, baseURL.String())
 	if err != nil {
 		fmt.Printf("error getting urls from currentURL html %s: %s\n", rawCurrentURL, err)
 		return
 	}
 	for _, URL := range URLs {
-		crawlPage(rawBaseURL, URL, pages)
+		cfg.crawlPage(URL)
 	}
 }

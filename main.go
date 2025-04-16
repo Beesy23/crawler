@@ -22,7 +22,9 @@ func main() {
 
 	pages := make(map[string]int)
 
-	crawlPage(rawBaseURL, rawBaseURL, pages)
+	cfg := config{}
+
+	cfg.crawlPage(rawBaseURL)
 
 	fmt.Println("\nCrawling results:")
 	for url, count := range pages {

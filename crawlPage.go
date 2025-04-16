@@ -56,3 +56,7 @@ func (cfg *config) crawlPage(rawCurrentURL string) {
 		cfg.crawlPage(URL)
 	}
 }
+
+func (cfg *config) addPageVisit(normalizedURL string) (isFirst bool) {
+	return true
+}

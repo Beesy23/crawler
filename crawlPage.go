@@ -15,9 +15,8 @@ type config struct {
 }
 
 func (cfg *config) crawlPage(rawCurrentURL string) {
-	baseURL := cfg.baseURL
-	pages := cfg.pages
 
+	baseURL := cfg.baseURL
 	currentURL, err := url.Parse(rawCurrentURL)
 	if err != nil {
 		fmt.Printf("error parsing currentURL %s: %s\n", rawCurrentURL, err)
@@ -33,11 +32,9 @@ func (cfg *config) crawlPage(rawCurrentURL string) {
 		return
 	}
 
-	if _, visited := pages[normalisedURL]; visited {
-		pages[normalisedURL]++
+	isFirst := cfg.addPageVisit(normalisedURL)
+	if !isFirst {
 		return
-	} else {
-		pages[normalisedURL] = 1
 	}
 
 	HTML, err := getHTML(rawCurrentURL)
@@ -52,11 +49,30 @@ func (cfg *config) crawlPage(rawCurrentURL string) {
 		fmt.Printf("error getting urls from currentURL html %s: %s\n", rawCurrentURL, err)
 		return
 	}
+
 	for _, URL := range URLs {
-		cfg.crawlPage(URL)
+		cfg.wg.Add(1)
+		go func(urlToCrawl string) {
+			cfg.concurrencyControl <- struct{}{}
+			defer func() {
+				<-cfg.concurrencyControl
+				cfg.wg.Done()
+			}()
+
+			cfg.crawlPage(urlToCrawl)
+		}(URL)
 	}
 }
 
 func (cfg *config) addPageVisit(normalizedURL string) (isFirst bool) {
+	cfg.mu.Lock()
+	defer cfg.mu.Unlock()
+
+	if _, ok := cfg.pages[normalizedURL]; ok {
+
+		return false
+	}
+
+	cfg.pages[normalizedURL] = 1
 	return true
 }

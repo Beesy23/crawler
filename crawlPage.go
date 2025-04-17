@@ -12,9 +12,17 @@ type config struct {
 	mu                 *sync.Mutex
 	concurrencyControl chan struct{}
 	wg                 *sync.WaitGroup
+	maxPages           int
 }
 
 func (cfg *config) crawlPage(rawCurrentURL string) {
+
+	cfg.mu.Lock()
+	if len(cfg.pages) >= cfg.maxPages {
+		cfg.mu.Unlock()
+		return
+	}
+	cfg.mu.Unlock()
 
 	baseURL := cfg.baseURL
 	currentURL, err := url.Parse(rawCurrentURL)
@@ -69,7 +77,6 @@ func (cfg *config) addPageVisit(normalizedURL string) (isFirst bool) {
 	defer cfg.mu.Unlock()
 
 	if _, ok := cfg.pages[normalizedURL]; ok {
-
 		return false
 	}
 

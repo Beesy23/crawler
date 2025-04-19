@@ -54,4 +54,5 @@ func main() {
 	for url, count := range cfg.pages {
 		fmt.Printf("%s:%d\n", url, count)
 	}
+	printReport(cfg.pages, rawBaseURL)
 }

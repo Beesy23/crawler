@@ -59,6 +59,17 @@ func (cfg *config) crawlPage(rawCurrentURL string) {
 	}
 
 	for _, URL := range URLs {
+
+		normalizedDestURL, err := normalizeURL(URL)
+		if err != nil {
+			fmt.Printf("error normalizing URL %s: %s\n", URL, err)
+			continue
+		}
+
+		cfg.mu.Lock()
+		cfg.pages[normalizedDestURL]++
+		cfg.mu.Unlock()
+
 		cfg.wg.Add(1)
 		go func(urlToCrawl string) {
 			cfg.concurrencyControl <- struct{}{}

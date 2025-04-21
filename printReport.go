@@ -23,11 +23,23 @@ func printReport(pages map[string]int, baseURL string) {
 
 func sortPages(pages map[string]int) []page {
 	sortedPages := []page{}
-	for url, timeVisited := range pages {
-		pageToSort := page{url, timeVisited}
-		if slices.Contains(sortedPages, pageToSort) {
 
-		}
+	for url, linkCount := range pages {
+		sortedPages = append(sortedPages, page{url, linkCount})
 	}
+
+	slices.SortFunc(sortedPages, func(a, b page) int {
+		if a.numberLinks != b.numberLinks {
+			return b.numberLinks - a.numberLinks
+		}
+
+		if a.numberLinks < b.numberLinks {
+			return -1
+		} else if a.pageName > b.pageName {
+			return 1
+		}
+		return 0
+	})
+
 	return sortedPages
 }
